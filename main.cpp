@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <random>
 #include <utility>
+#include <optional>
 // NOTE: Remember to compile with `-s USE_SDL=2` and `-s USE_SDL_IMAGE=2` if using emscripten.
 // build with g++ --std=c++17 main.cpp -lSDL2 -lSDL2_image otherwise
 #ifdef __EMSCRIPTEN__
@@ -63,8 +64,9 @@ public:
 
 class Pile {
 	std::list<Card> cards;
-	static std::pair<Uint32, Sint32> GetYIncrement() {
-		return { 96 / 5, 0 };
+	bool m_is_compacted{false};
+	std::pair<Uint32, Sint32> GetYIncrement() const {
+		return { 96 / 5, m_is_compacted ? static_cast<Sint32>(cards.size() - 1) : 0 };
 	}
 	void MoveNElementsToList(size_t to_skip, std::list<Card>& other, bool at_end = false) {
 		auto begin = cards.begin();
@@ -99,16 +101,19 @@ public:
 			return;
 		cards.back().ToggleVisibility(true);
 	}
-	void CheckForCompletition() {
+	std::optional<Pile> CheckForCompletition() {
 		if(size() < 13)
-			return;
+			return { std::nullopt };
 		const auto end = cards.end();
-		auto it = std::find_if(cards.begin(), end, [](const Card& c) {
-			return c.GetNumber() == 13;
-		});
+		auto find_next = [&](auto it) {
+			return std::find_if(it, end, [](const Card& c) {
+				return c.GetNumber() == 13;
+			});
+		};
+		auto it = find_next(cards.begin());
 		while(it != cards.end()) {
 			if(std::distance(it, end) < 13)
-				return;
+				return { std::nullopt };
 			Uint8 target_number = 13;
 			const SUIT target_suit = it->GetSuit();
 			for(; it != end || target_number != 0; ++it, --target_number) {
@@ -117,16 +122,14 @@ public:
 				if(it->GetNumber() != target_number)
 					break;
 			}
-			if(target_number == 0)
-				goto ok;
-			it = std::find_if(it, cards.end(), [](const Card& c) {
-				return c.GetNumber() == 13;
-			});
+			if(target_number == 0) {
+				Pile temp_pile;
+				MoveNElementsToList(std::distance(cards.begin(), it) - 13, temp_pile.cards);
+				return { std::move(temp_pile) };
+			}
+			it = find_next(it);
 		}
-		return;
-		ok:
-		Pile temp_pile;
-		MoveNElementsToList(std::distance(cards.begin(), it) - 13, temp_pile.cards);
+		return { std::nullopt };
 	}
 	template<typename Iterator>
 	bool DoCardsInIteratorRangeMakeAValidSequence(Iterator first, Iterator last) {
@@ -160,6 +163,7 @@ public:
 	}
 	bool empty() const { return cards.empty(); }
 	size_t size() const { return cards.size(); }
+	void CompactPile() { m_is_compacted = true; }
 };
 
 class GameBoard {
@@ -178,6 +182,7 @@ class GameBoard {
 	std::array<Pile, 10> piles;
 	Pile* previous_pile{};
 	Pile floating_pile;
+	std::list<Pile> completedPiles;
 	static std::pair<Uint32, Uint32> GetColumnBounds(size_t column) {
 		return { 10 + (COLUMN_OFFSET * column), (10 + (COLUMN_OFFSET * column)) + Card::WIDTH };
 	}
@@ -201,7 +206,12 @@ class GameBoard {
 				const auto ret = target_pile.MergePile(floating_pile);
 				if(ret) {
 					std::exchange(previous_pile, nullptr)->MakeLastCardVisible();
-					target_pile.CheckForCompletition();
+					auto completed_pile = target_pile.CheckForCompletition();
+					if(completed_pile.has_value()) {
+						auto pile = std::move(*completed_pile);
+						pile.CompactPile();
+						completedPiles.push_back(std::move(pile));
+					}
 				}
 				return ret;
 			}
@@ -232,6 +242,14 @@ public:
 		}
 		const auto y_offset = floating_pile.size() > 1 ? 0 : Card::HEIGHT/2;
 		floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - y_offset, 50, draw_func);
+
+		{
+			int startx = 50;
+			for(const auto& pile : completedPiles) {
+				pile.DrawAt(startx, 600, 50, draw_func);
+				startx += Card::WIDTH / 3;
+			}
+		}
 	}
 	bool TryGrabFromPile(Uint32 mouse_x, Uint32 mouse_y) {
 		return TryPick(mouse_x, mouse_y);
