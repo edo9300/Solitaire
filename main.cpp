@@ -115,6 +115,7 @@ public:
 		return false;
 	}
 	bool empty() const { return cards.empty(); }
+	size_t size() const { return cards.size(); }
 };
 
 class GameBoard {
@@ -182,7 +183,8 @@ public:
 			pile.DrawAt(x, 20, 50, draw_func);
 			x += COLUMN_OFFSET;
 		}
-		floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - Card::HEIGHT/2, 50, draw_func);
+		const auto y_offset = floating_pile.size() > 1 ? 0 : Card::HEIGHT/2;
+		floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - y_offset, 50, draw_func);
 	}
 	bool TryGrabFromPile(Uint32 mouse_x, Uint32 mouse_y) {
 		return TryPick(mouse_x, mouse_y);
