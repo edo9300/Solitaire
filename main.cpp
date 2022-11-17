@@ -75,14 +75,14 @@ public:
 		cards.emplace_back(suit, number);
 	}
 	bool MergePile(Pile& other) {
-		if(!IsEmpty() && cards.back().IsVisible())
+		if(!empty() && cards.back().IsVisible())
 			return false;
 		other.MoveNElementsToList(0, cards, true);
 		return true;
 	}
 	template<typename T>
 	void DrawAt(Sint32 x, Sint32 start_y, Uint32 max_y, T&& draw_func) const {
-		if(IsEmpty())
+		if(empty())
 			return;
 		auto [increment, cards_to_skip] = GetYIncrement();
 		auto it = cards.begin();
@@ -93,7 +93,7 @@ public:
 		}
 	}
 	void MakeLastCardVisible() {
-		if(IsEmpty())
+		if(empty())
 			return;
 		cards.back().ToggleVisibility(true);
 	}
@@ -114,7 +114,7 @@ public:
 		}
 		return false;
 	}
-	bool IsEmpty() const { return cards.empty(); }
+	bool empty() const { return cards.empty(); }
 };
 
 class GameBoard {
@@ -188,7 +188,7 @@ public:
 		return TryPick(mouse_x, mouse_y);
 	}
 	bool DropToPileOrRollBack(Uint32 mouse_x, Uint32 mouse_y) {
-		if(floating_pile.IsEmpty())
+		if(floating_pile.empty())
 			return false;
 		if(!TryDrop(mouse_x, mouse_y))
 			RollBack();
