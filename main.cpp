@@ -182,7 +182,7 @@ public:
 			pile.DrawAt(x, 20, 50, draw_func);
 			x += COLUMN_OFFSET;
 		}
-		floating_pile.DrawAt(mouse_x, mouse_y, 50, draw_func);
+		floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - Card::HEIGHT/2, 50, draw_func);
 	}
 	bool TryGrabFromPile(Uint32 mouse_x, Uint32 mouse_y) {
 		return TryPick(mouse_x, mouse_y);
