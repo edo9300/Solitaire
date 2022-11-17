@@ -101,7 +101,6 @@ public:
 		auto [increment, cards_to_skip] = GetYIncrement();
 		auto start_y = 20 + (increment * (cards.size() - cards_to_skip - 1));
 		auto it = cards.rbegin();
-		std::advance(it, cards_to_skip);
 		for(int i = cards.size() - 1; i >= cards_to_skip; --i) {
 			if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 				if(!it->IsVisible())
