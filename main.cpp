@@ -103,7 +103,7 @@ public:
 		auto it = cards.rbegin();
 		std::advance(it, cards_to_skip);
 		for(int i = cards.size() - 1; i >= cards_to_skip; --i) {
-			if(start_y <= mouse_y && start_y + Card::WIDTH >= mouse_y) {
+			if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 				if(!it->IsVisible())
 					return false;
 				MoveNElementsToList(i, other.cards);
