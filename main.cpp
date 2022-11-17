@@ -41,6 +41,8 @@ public:
 		return GetTextureCoords(4, 0);
 	}
 	Card(SUIT suit, Uint8 number) : m_suit(suit), m_number(number), m_is_hidden(true) {}
+	SUIT GetSuit() const { return m_suit; }
+	Uint8 GetNumber() const { return m_number; }
 	SDL_Rect GetTextureRect()  const {
 		if(m_is_hidden)
 			return GetBackTextureRect();
@@ -75,7 +77,7 @@ public:
 		cards.emplace_back(suit, number);
 	}
 	bool MergePile(Pile& other) {
-		if(!empty() && cards.back().IsVisible())
+		if(!empty() && cards.back().IsVisible() && (cards.back().GetNumber() - 1) != other.cards.front().GetNumber())
 			return false;
 		other.MoveNElementsToList(0, cards, true);
 		return true;
@@ -96,6 +98,35 @@ public:
 		if(empty())
 			return;
 		cards.back().ToggleVisibility(true);
+	}
+	void CheckForCompletition() {
+		if(size() < 13)
+			return;
+		const auto end = cards.end();
+		auto it = std::find_if(cards.begin(), end, [](const Card& c) {
+			return c.GetNumber() == 13;
+		});
+		while(it != cards.end()) {
+			if(std::distance(it, end) < 13)
+				return;
+			Uint8 target_number = 13;
+			const SUIT target_suit = it->GetSuit();
+			for(; it != end || target_number != 0; ++it, --target_number) {
+				if(it->GetSuit() != target_suit)
+					break;
+				if(it->GetNumber() != target_number)
+					break;
+			}
+			if(target_number == 0)
+				goto ok;
+			it = std::find_if(it, cards.end(), [](const Card& c) {
+				return c.GetNumber() == 13;
+			});
+		}
+		return;
+		ok:
+		Pile temp_pile;
+		MoveNElementsToList(std::distance(cards.begin(), it) - 13, temp_pile.cards);
 	}
 	bool HitTestAndSplice(Uint32 mouse_x, Uint32 mouse_y, Pile& other) {
 		auto [increment, cards_to_skip] = GetYIncrement();
@@ -152,9 +183,12 @@ class GameBoard {
 		for(size_t i = 0; i < piles.size(); ++i) {
 			auto [left_bound, right_bound] = GetColumnBounds(i);
 			if(mouse_x >= left_bound && mouse_x <= right_bound) {
-				const auto ret = piles[i].MergePile(floating_pile);
-				if(ret)
+				auto& target_pile = piles[i];
+				const auto ret = target_pile.MergePile(floating_pile);
+				if(ret) {
 					std::exchange(previous_pile, nullptr)->MakeLastCardVisible();
+					target_pile.CheckForCompletition();
+				}
 				return ret;
 			}
 		}
