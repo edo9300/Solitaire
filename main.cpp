@@ -128,6 +128,18 @@ public:
 		Pile temp_pile;
 		MoveNElementsToList(std::distance(cards.begin(), it) - 13, temp_pile.cards);
 	}
+	template<typename Iterator>
+	bool DoCardsInIteratorRangeMakeAValidSequence(Iterator first, Iterator last) {
+		while(first != last) {
+			auto& below = *first++;
+			if(first == last)
+				return true;
+			auto& above = *first;
+			if(below.GetSuit() != above.GetSuit() || (below.GetNumber() + 1) != above.GetNumber())
+				return false;
+		}
+		return true;
+	}
 	bool HitTestAndSplice(Uint32 mouse_x, Uint32 mouse_y, Pile& other) {
 		auto [increment, cards_to_skip] = GetYIncrement();
 		auto start_y = 20 + (increment * (cards.size() - cards_to_skip - 1));
@@ -135,6 +147,8 @@ public:
 		for(int i = cards.size() - 1; i >= cards_to_skip; --i) {
 			if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 				if(!it->IsVisible())
+					return false;
+				if(!DoCardsInIteratorRangeMakeAValidSequence(cards.rbegin(), std::next(it)))
 					return false;
 				MoveNElementsToList(i, other.cards);
 				return true;
