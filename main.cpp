@@ -82,6 +82,8 @@ public:
 	}
 	template<typename T>
 	void DrawAt(Sint32 x, Sint32 start_y, Uint32 max_y, T&& draw_func) const {
+		if(IsEmpty())
+			return;
 		auto [increment, cards_to_skip] = GetYIncrement();
 		auto it = cards.begin();
 		std::advance(it, cards_to_skip);
