@@ -66,7 +66,7 @@ class Pile {
 	std::list<Card> m_cards;
 	bool m_is_compacted{false};
 	std::pair<Uint32, Sint32> GetYIncrement() const {
-		return { 96 / 5, m_is_compacted ? static_cast<Sint32>(m_cards.size() - 1) : 0 };
+		return { Card::HEIGHT / 5u, m_is_compacted ? static_cast<Sint32>(m_cards.size() - 1) : 0 };
 	}
 	void MoveNElementsToList(size_t to_skip, std::list<Card>& other, bool at_end = false) {
 		auto begin = m_cards.begin();
