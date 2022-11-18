@@ -346,6 +346,7 @@ bool GameWindow::EventLoop() {
 					DrawBoard();
 				break;
 			}
+			break;
 		case SDL_MOUSEMOTION:
 			m_mouse_x = e.motion.x;
 			m_mouse_y = e.motion.y;
