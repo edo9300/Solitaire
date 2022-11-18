@@ -63,25 +63,25 @@ public:
 };
 
 class Pile {
-	std::list<Card> cards;
+	std::list<Card> m_cards;
 	bool m_is_compacted{false};
 	std::pair<Uint32, Sint32> GetYIncrement() const {
-		return { 96 / 5, m_is_compacted ? static_cast<Sint32>(cards.size() - 1) : 0 };
+		return { 96 / 5, m_is_compacted ? static_cast<Sint32>(m_cards.size() - 1) : 0 };
 	}
 	void MoveNElementsToList(size_t to_skip, std::list<Card>& other, bool at_end = false) {
-		auto begin = cards.begin();
+		auto begin = m_cards.begin();
 		std::advance(begin, to_skip);
-		other.splice(at_end ? other.end() : other.begin(), cards, begin, cards.end());
+		other.splice(at_end ? other.end() : other.begin(), m_cards, begin, m_cards.end());
 	}
 public:
 	Pile() = default;
 	void AddCard(SUIT suit, Uint8 number) {
-		cards.emplace_back(suit, number);
+		m_cards.emplace_back(suit, number);
 	}
 	bool MergePile(Pile& other) {
-		if(!empty() && cards.back().IsVisible() && (cards.back().GetNumber() - 1) != other.cards.front().GetNumber())
+		if(!empty() && m_cards.back().IsVisible() && (m_cards.back().GetNumber() - 1) != other.m_cards.front().GetNumber())
 			return false;
-		other.MoveNElementsToList(0, cards, true);
+		other.MoveNElementsToList(0, m_cards, true);
 		return true;
 	}
 	template<typename T>
@@ -89,9 +89,9 @@ public:
 		if(empty())
 			return;
 		auto [increment, cards_to_skip] = GetYIncrement();
-		auto it = cards.begin();
+		auto it = m_cards.begin();
 		std::advance(it, cards_to_skip);
-		for(; it != cards.end(); ++it) {
+		for(; it != m_cards.end(); ++it) {
 			it->DrawAt(x, start_y, draw_func);
 			start_y += increment;
 		}
@@ -99,19 +99,19 @@ public:
 	void MakeLastCardVisible() {
 		if(empty())
 			return;
-		cards.back().ToggleVisibility(true);
+		m_cards.back().ToggleVisibility(true);
 	}
 	std::optional<Pile> CheckForCompletition() {
 		if(size() < 13)
 			return { std::nullopt };
-		const auto end = cards.end();
+		const auto end = m_cards.end();
 		auto find_next = [&](auto it) {
 			return std::find_if(it, end, [](const Card& c) {
 				return c.GetNumber() == 13;
 			});
 		};
-		auto it = find_next(cards.begin());
-		while(it != cards.end()) {
+		auto it = find_next(m_cards.begin());
+		while(it != m_cards.end()) {
 			if(std::distance(it, end) < 13)
 				return { std::nullopt };
 			Uint8 target_number = 13;
@@ -124,7 +124,7 @@ public:
 			}
 			if(target_number == 0) {
 				Pile temp_pile;
-				MoveNElementsToList(std::distance(cards.begin(), it) - 13, temp_pile.cards);
+				MoveNElementsToList(std::distance(m_cards.begin(), it) - 13, temp_pile.m_cards);
 				return { std::move(temp_pile) };
 			}
 			it = find_next(it);
@@ -145,15 +145,15 @@ public:
 	}
 	bool HitTestAndSplice(Uint32 mouse_x, Uint32 mouse_y, Pile& other) {
 		auto [increment, cards_to_skip] = GetYIncrement();
-		auto start_y = 20 + (increment * (cards.size() - cards_to_skip - 1));
-		auto it = cards.rbegin();
-		for(int i = cards.size() - 1; i >= cards_to_skip; --i) {
+		auto start_y = 20 + (increment * (m_cards.size() - cards_to_skip - 1));
+		auto it = m_cards.rbegin();
+		for(int i = m_cards.size() - 1; i >= cards_to_skip; --i) {
 			if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 				if(!it->IsVisible())
 					return false;
-				if(!DoCardsInIteratorRangeMakeAValidSequence(cards.rbegin(), std::next(it)))
+				if(!DoCardsInIteratorRangeMakeAValidSequence(m_cards.rbegin(), std::next(it)))
 					return false;
-				MoveNElementsToList(i, other.cards);
+				MoveNElementsToList(i, other.m_cards);
 				return true;
 			}
 			++it;
@@ -161,8 +161,8 @@ public:
 		}
 		return false;
 	}
-	bool empty() const { return cards.empty(); }
-	size_t size() const { return cards.size(); }
+	bool empty() const { return m_cards.empty(); }
+	size_t size() const { return m_cards.size(); }
 	void CompactPile() { m_is_compacted = true; }
 };
 
@@ -179,38 +179,38 @@ class GameBoard {
 		std::shuffle(ret.begin(), ret.end(), rnd);
 		return ret;
 	}
-	std::array<Pile, 10> piles;
-	Pile* previous_pile{};
-	Pile floating_pile;
-	std::list<Pile> completedPiles;
+	std::array<Pile, 10> m_piles;
+	Pile* m_previous_pile{};
+	Pile m_floating_pile;
+	std::list<Pile> m_completed_piles;
 	static std::pair<Uint32, Uint32> GetColumnBounds(size_t column) {
 		return { 10 + (COLUMN_OFFSET * column), (10 + (COLUMN_OFFSET * column)) + Card::WIDTH };
 	}
 	bool TryPick(Uint32 mouse_x, Uint32 mouse_y) {
-		for(size_t i = 0; i < piles.size(); ++i) {
+		for(size_t i = 0; i < m_piles.size(); ++i) {
 			auto [left_bound, right_bound] = GetColumnBounds(i);
 			if(mouse_x >= left_bound && mouse_x <= right_bound) {
-				const auto ret = piles[i].HitTestAndSplice(mouse_x, mouse_y, floating_pile);
+				const auto ret = m_piles[i].HitTestAndSplice(mouse_x, mouse_y, m_floating_pile);
 				if(ret)
-					previous_pile = &piles[i];
+					m_previous_pile = &m_piles[i];
 				return ret;
 			}
 		}
 		return false;
 	}
 	bool TryDrop(Uint32 mouse_x, Uint32 mouse_y) {
-		for(size_t i = 0; i < piles.size(); ++i) {
+		for(size_t i = 0; i < m_piles.size(); ++i) {
 			auto [left_bound, right_bound] = GetColumnBounds(i);
 			if(mouse_x >= left_bound && mouse_x <= right_bound) {
-				auto& target_pile = piles[i];
-				const auto ret = target_pile.MergePile(floating_pile);
+				auto& target_pile = m_piles[i];
+				const auto ret = target_pile.MergePile(m_floating_pile);
 				if(ret) {
-					std::exchange(previous_pile, nullptr)->MakeLastCardVisible();
+					std::exchange(m_previous_pile, nullptr)->MakeLastCardVisible();
 					auto completed_pile = target_pile.CheckForCompletition();
 					if(completed_pile.has_value()) {
 						auto pile = std::move(*completed_pile);
 						pile.CompactPile();
-						completedPiles.push_back(std::move(pile));
+						m_completed_piles.push_back(std::move(pile));
 					}
 				}
 				return ret;
@@ -219,33 +219,33 @@ class GameBoard {
 		return false;
 	}
 	void RollBack() {
-		std::exchange(previous_pile, nullptr)->MergePile(floating_pile);
+		std::exchange(m_previous_pile, nullptr)->MergePile(m_floating_pile);
 	}
 public:
 	GameBoard() {
 		auto arr = make_random_array();
 		size_t pile_idx = 0;
 		for(auto [suit, number] : arr) {
-			piles[pile_idx].AddCard(suit, number);
-			pile_idx = (pile_idx + 1) % piles.size();
+			m_piles[pile_idx].AddCard(suit, number);
+			pile_idx = (pile_idx + 1) % m_piles.size();
 		}
-		for(auto& pile : piles) {
+		for(auto& pile : m_piles) {
 			pile.MakeLastCardVisible();
 		}
 	}
 	template<typename T>
 	void Draw(Uint32 mouse_x, Uint32 mouse_y, T&& draw_func) const {
 		Uint32 x = 10;
-		for(auto& pile : piles) {
+		for(auto& pile : m_piles) {
 			pile.DrawAt(x, 20, 50, draw_func);
 			x += COLUMN_OFFSET;
 		}
-		const auto y_offset = floating_pile.size() > 1 ? 0 : Card::HEIGHT/2;
-		floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - y_offset, 50, draw_func);
+		const auto y_offset = m_floating_pile.size() > 1 ? 0 : Card::HEIGHT/2;
+		m_floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - y_offset, 50, draw_func);
 
 		{
 			int startx = 50;
-			for(const auto& pile : completedPiles) {
+			for(const auto& pile : m_completed_piles) {
 				pile.DrawAt(startx, 600, 50, draw_func);
 				startx += Card::WIDTH / 3;
 			}
@@ -255,7 +255,7 @@ public:
 		return TryPick(mouse_x, mouse_y);
 	}
 	bool DropToPileOrRollBack(Uint32 mouse_x, Uint32 mouse_y) {
-		if(floating_pile.empty())
+		if(m_floating_pile.empty())
 			return false;
 		if(!TryDrop(mouse_x, mouse_y))
 			RollBack();
