@@ -323,9 +323,15 @@ void GameWindow::DrawBoard() {
 	SDL_RenderPresent(m_renderer);
 }
 
+#ifndef __EMSCRIPTEN__
+static constexpr auto& SDL_WaitFunction = SDL_WaitEvent;
+#else
+static const auto& SDL_WaitFunction = emscripten_has_asyncify() ? SDL_WaitEvent : SDL_PollEvent;
+#endif
+
 bool GameWindow::EventLoop() {
 	SDL_Event e;
-	while(SDL_WaitEvent(&e)) {
+	while(SDL_WaitFunction(&e)) {
 		switch(e.type) {
 		case SDL_QUIT: {
 #ifdef __EMSCRIPTEN__
