@@ -10,8 +10,6 @@
 #include <random>
 #include <utility>
 #include <optional>
-// NOTE: Remember to compile with `-s USE_SDL=2` and `-s USE_SDL_IMAGE=2` if using emscripten.
-// build with g++ --std=c++17 main.cpp -lSDL2 -lSDL2_image otherwise
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
