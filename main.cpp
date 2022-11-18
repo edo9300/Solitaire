@@ -47,7 +47,7 @@ public:
 	SDL_Rect GetTextureRect()  const {
 		if(m_is_hidden)
 			return GetBackTextureRect();
-		return GetTextureCoords(static_cast<Uint32>(m_suit), m_number - 1);
+		return GetTextureCoords(static_cast<Uint8>(m_suit), m_number - 1u);
 	}
 	void ToggleVisibility(bool is_visible) {
 		m_is_hidden = !is_visible;
@@ -65,8 +65,8 @@ public:
 class Pile {
 	std::list<Card> m_cards;
 	bool m_is_compacted{false};
-	std::pair<Uint32, Sint32> GetYIncrement() const {
-		return { Card::HEIGHT / 5u, m_is_compacted ? static_cast<Sint32>(m_cards.size() - 1) : 0 };
+	std::pair<Uint32, size_t> GetYIncrement() const {
+		return { Card::HEIGHT / 5u, m_is_compacted ? static_cast<size_t>(m_cards.size() - 1) : 0 };
 	}
 	void MoveNElementsToList(size_t to_skip, std::list<Card>& other, bool at_end = false) {
 		auto begin = m_cards.begin();
@@ -85,7 +85,7 @@ public:
 		return true;
 	}
 	template<typename T>
-	void DrawAt(Sint32 x, Sint32 start_y, Uint32 max_y, T&& draw_func) const {
+	void DrawAt(Sint32 x, Sint32 start_y, [[maybe_unused]] Uint32 max_y, T&& draw_func) const {
 		if(empty())
 			return;
 		auto [increment, cards_to_skip] = GetYIncrement();
@@ -124,7 +124,7 @@ public:
 			}
 			if(target_number == 0) {
 				Pile temp_pile;
-				MoveNElementsToList(std::distance(m_cards.begin(), it) - 13, temp_pile.m_cards);
+				MoveNElementsToList(static_cast<size_t>(std::distance(m_cards.begin(), it)) - 13, temp_pile.m_cards);
 				return { std::move(temp_pile) };
 			}
 			it = find_next(it);
@@ -143,11 +143,11 @@ public:
 		}
 		return true;
 	}
-	bool HitTestAndSplice(Uint32 mouse_x, Uint32 mouse_y, Pile& other) {
+	bool HitTestAndSplice([[maybe_unused]] Sint32 mouse_x, Sint32 mouse_y, Pile& other) {
 		auto [increment, cards_to_skip] = GetYIncrement();
-		auto start_y = 20 + (increment * (m_cards.size() - cards_to_skip - 1));
+		auto start_y = 20 + static_cast<Sint32>(increment * (m_cards.size() - cards_to_skip - 1));
 		auto it = m_cards.rbegin();
-		for(int i = m_cards.size() - 1; i >= cards_to_skip; --i) {
+		for(size_t i = m_cards.size() - 1; i >= cards_to_skip; --i) {
 			if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 				if(!it->IsVisible())
 					return false;
@@ -171,9 +171,9 @@ class GameBoard {
 	static constexpr auto TOTAL_DECKS = 8;
 	static auto make_random_array() {
 		std::array<std::pair<SUIT, Uint8>, TOTAL_DECKS * 13> ret;
-		for(int i = 0; i < TOTAL_DECKS; ++i) {
-			for(int j = 0; j < 13; ++j)
-				ret[i * 13 + j] = { static_cast<SUIT>(i / 2), j + 1 };
+		for(Uint8 i = 0; i < TOTAL_DECKS; ++i) {
+			for(Uint8 j = 0; j < 13; ++j)
+				ret[i * 13u + j] = { static_cast<SUIT>(i / 2), static_cast<Uint8>(j + 1) };
 		}
 		std::mt19937 rnd(std::random_device{}());
 		std::shuffle(ret.begin(), ret.end(), rnd);
@@ -183,10 +183,10 @@ class GameBoard {
 	Pile* m_previous_pile{};
 	Pile m_floating_pile;
 	std::list<Pile> m_completed_piles;
-	static std::pair<Uint32, Uint32> GetColumnBounds(size_t column) {
-		return { 10 + (COLUMN_OFFSET * column), (10 + (COLUMN_OFFSET * column)) + Card::WIDTH };
+	static std::pair<Sint32, Sint32> GetColumnBounds(size_t column) {
+		return { 10 + static_cast<Sint32>(COLUMN_OFFSET * column), static_cast<Sint32>(10 + (COLUMN_OFFSET * column)) + Card::WIDTH };
 	}
-	bool TryPick(Uint32 mouse_x, Uint32 mouse_y) {
+	bool TryPick(Sint32 mouse_x, Sint32 mouse_y) {
 		for(size_t i = 0; i < m_piles.size(); ++i) {
 			auto [left_bound, right_bound] = GetColumnBounds(i);
 			if(mouse_x >= left_bound && mouse_x <= right_bound) {
@@ -198,7 +198,7 @@ class GameBoard {
 		}
 		return false;
 	}
-	bool TryDrop(Uint32 mouse_x, Uint32 mouse_y) {
+	bool TryDrop(Sint32 mouse_x, [[maybe_unused]] Sint32 mouse_y) {
 		for(size_t i = 0; i < m_piles.size(); ++i) {
 			auto [left_bound, right_bound] = GetColumnBounds(i);
 			if(mouse_x >= left_bound && mouse_x <= right_bound) {
@@ -234,15 +234,14 @@ public:
 		}
 	}
 	template<typename T>
-	void Draw(Uint32 mouse_x, Uint32 mouse_y, T&& draw_func) const {
-		Uint32 x = 10;
+	void Draw(Sint32 mouse_x, Sint32 mouse_y, T&& draw_func) const {
+		Sint32 x = 10;
 		for(auto& pile : m_piles) {
 			pile.DrawAt(x, 20, 50, draw_func);
 			x += COLUMN_OFFSET;
 		}
 		const auto y_offset = m_floating_pile.size() > 1 ? 0 : Card::HEIGHT/2;
 		m_floating_pile.DrawAt(mouse_x - Card::WIDTH/2, mouse_y - y_offset, 50, draw_func);
-
 		{
 			int startx = 50;
 			for(const auto& pile : m_completed_piles) {
@@ -251,10 +250,10 @@ public:
 			}
 		}
 	}
-	bool TryGrabFromPile(Uint32 mouse_x, Uint32 mouse_y) {
+	bool TryGrabFromPile(Sint32 mouse_x, Sint32 mouse_y) {
 		return TryPick(mouse_x, mouse_y);
 	}
-	bool DropToPileOrRollBack(Uint32 mouse_x, Uint32 mouse_y) {
+	bool DropToPileOrRollBack(Sint32 mouse_x, Sint32 mouse_y) {
 		if(m_floating_pile.empty())
 			return false;
 		if(!TryDrop(mouse_x, mouse_y))
@@ -369,7 +368,7 @@ bool GameWindow::EventLoop() {
 	return true;
 }
 
-extern "C" int main(int argc, char** argv) {
+extern "C" int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
 	std::unique_ptr<GameWindow> game{};
