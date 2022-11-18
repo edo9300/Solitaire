@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2022, Edoardo Lolletti <edoardo762@gmail.com>
+ *
+ * SPDX-License-Identifier: Zlib
+ */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_main.h>
