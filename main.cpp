@@ -6,15 +6,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_main.h>
-#include <stdexcept>
-#include <memory>
+#include <stdexcept> //std::runtime_error
+#include <memory> //std::unique_ptr
 #include <list>
 #include <array>
-#include <cstdlib>
-#include <algorithm>
-#include <random>
-#include <utility>
-#include <optional>
+#include <algorithm> //std::find_if, std::shuffle
+#include <random> //std::mt19937
+#include <utility> //std::exchange
+#include <optional> //std::optional
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
