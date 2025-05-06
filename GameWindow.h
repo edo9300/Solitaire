@@ -15,6 +15,7 @@
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Texture;
+union SDL_Event;
 
 class GameWindow {
 	uint32_t m_display_format{};
@@ -24,13 +25,12 @@ class GameWindow {
 	int32_t m_mouse_x{};
 	int32_t m_mouse_y{};
 	GameBoard m_board;
-	bool EventLoop();
 	void DrawBoard();
 	SDL_Texture* LoadSpriteTexture(const char* path) const;
 public:
 	GameWindow();
 	~GameWindow();
-	void run();
+	int onEvent(const SDL_Event& e);
 };
 
 #endif //GAME_WINDOW_H

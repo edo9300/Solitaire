@@ -16,7 +16,7 @@
 
 class GameBoard {
 	static constexpr auto COLUMN_OFFSET = 100;
-	static constexpr auto TOTAL_DECKS = 8;
+	static constexpr auto TOTAL_DECKS = 4;
 	std::array<Pile, 10> m_piles;
 	Pile* m_previous_pile{};
 	Pile m_floating_pile;

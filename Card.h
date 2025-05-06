@@ -20,8 +20,8 @@ class Card {
 	SUIT m_suit;
 	uint8_t m_number;
 	bool m_is_hidden;
-	static SDL_Rect GetTextureCoords(uint8_t suit, uint8_t idx) {
-		SDL_Rect rect{};
+	static SDL_FRect GetTextureCoords(uint8_t suit, uint8_t idx) {
+		SDL_FRect rect{};
 		rect.w = WIDTH;
 		rect.h = HEIGHT;
 		rect.x = WIDTH * idx;
@@ -32,13 +32,13 @@ public:
 	static constexpr auto WIDTH = 71;
 	static constexpr auto HEIGHT = 96;
 	
-	static SDL_Rect GetBackTextureRect() {
+	static SDL_FRect GetBackTextureRect() {
 		return GetTextureCoords(4, 0);
 	}
 	
 	Card(SUIT suit, uint8_t number) : m_suit(suit), m_number(number), m_is_hidden(true) {}
 	
-	SDL_Rect GetTextureRect()  const {
+	SDL_FRect GetTextureRect()  const {
 		if(m_is_hidden)
 			return GetBackTextureRect();
 		return GetTextureCoords(static_cast<uint8_t>(m_suit), m_number - 1u);
@@ -54,7 +54,7 @@ public:
 	
 	template<typename T>
 	void DrawAt(int32_t x, int32_t y, T&& draw_func) const {
-		SDL_Rect dest_rect{ x, y, 71, 96 };
+		SDL_FRect dest_rect{ static_cast<float>(x), static_cast<float>(y), 71.f, 96.f };
 		draw_func(GetTextureRect(), dest_rect);
 	}
 };

@@ -3,7 +3,7 @@ Sample solitaire game written in c++17 using SDL
 
 To build on linux run
 ```
-g++ --std=c++17 main.cpp GameBoard.cpp GameWindow.cpp Pile.cpp -lSDL2 -lSDL2_image -o Solitaire -O3
+g++ --std=c++17 main.cpp GameBoard.cpp GameWindow.cpp Pile.cpp -lSDL3 -lSDL3_image -o Solitaire -O3
 ```
 
 To build with the emscripten sdk run
