@@ -34,32 +34,32 @@ GameBoard::GameBoard() {
 bool GameBoard::TryPick(int32_t mouse_x, int32_t mouse_y) {
 	for(size_t i = 0; i < m_piles.size(); ++i) {
 		auto [left_bound, right_bound] = GetColumnBounds(i);
-		if(mouse_x >= left_bound && mouse_x <= right_bound) {
-			const auto ret = m_piles[i].HitTestAndSplice(mouse_x, mouse_y, m_floating_pile);
-			if(ret)
-				m_previous_pile = &m_piles[i];
-			return ret;
-		}
+		if(mouse_x < left_bound || mouse_x > right_bound)
+			continue;
+		const auto ret = m_piles[i].HitTestAndSplice(mouse_x, mouse_y, m_floating_pile);
+		if(ret)
+			m_previous_pile = &m_piles[i];
+		return ret;
 	}
 	return false;
 }
 bool GameBoard::TryDrop(int32_t mouse_x, [[maybe_unused]] int32_t mouse_y) {
 	for(size_t i = 0; i < m_piles.size(); ++i) {
 		auto [left_bound, right_bound] = GetColumnBounds(i);
-		if(mouse_x >= left_bound && mouse_x <= right_bound) {
-			auto& target_pile = m_piles[i];
-			const auto ret = target_pile.MergePile(m_floating_pile);
-			if(ret) {
-				std::exchange(m_previous_pile, nullptr)->MakeLastCardVisible();
-				auto completed_pile = target_pile.CheckForCompletition();
-				if(completed_pile.has_value()) {
-					auto pile = std::move(*completed_pile);
-					pile.CompactPile();
-					m_completed_piles.push_back(std::move(pile));
-				}
-			}
-			return ret;
+		if(mouse_x < left_bound || mouse_x > right_bound)
+			continue;
+		auto& target_pile = m_piles[i];
+		if(!target_pile.MergePile(m_floating_pile))
+			return false;
+		std::exchange(m_previous_pile, nullptr)->MakeLastCardVisible();
+		auto completed_pile = target_pile.CheckForCompletition();
+		if(completed_pile.has_value()) {
+			auto pile = std::move(*completed_pile);
+			pile.CompactPile();
+			m_completed_piles.push_back(std::move(pile));
+			target_pile.MakeLastCardVisible();
 		}
+		return true;
 	}
 	return false;
 }
