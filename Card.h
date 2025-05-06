@@ -7,7 +7,7 @@
 #define CARD_H
 
 #include <cstdint>
-#include <SDL2/SDL.h>
+#include <SDL/SDL.h>
 
 enum class SUIT : uint32_t {
 	CLUB,
@@ -54,7 +54,7 @@ public:
 	
 	template<typename T>
 	void DrawAt(int32_t x, int32_t y, T&& draw_func) const {
-		SDL_Rect dest_rect{ x, y, 71, 96 };
+		SDL_Rect dest_rect{ static_cast<Sint16>(x), static_cast<Sint16>(y), 71, 96 };
 		draw_func(GetTextureRect(), dest_rect);
 	}
 };

@@ -3,21 +3,20 @@
  *
  * SPDX-License-Identifier: Zlib
  */
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_main.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 #include <stdexcept> //std::runtime_error
 #include <optional>
 #include "GameWindow.h"
 
-extern "C" int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
 	std::optional<GameWindow> game{ std::nullopt };
 	try {
 		game.emplace();
 	} catch(const std::exception& e) {
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Initialization error", e.what(), nullptr);
+		printf("Initialization error: %s\n", e.what());
 		SDL_Quit();
 		return 1;
 	}
