@@ -10,6 +10,7 @@
 #include "GameWindow.h"
 
 GameWindow::GameWindow() {
+	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 	if(!SDL_CreateWindowAndRenderer("Solitaire", 1000, 670, SDL_WINDOW_RESIZABLE, &m_window, &m_renderer)) {
 		throw std::runtime_error("Failed to create window and renderer");
 	}
@@ -45,36 +46,37 @@ void GameWindow::DrawBoard() {
 }
 
 int GameWindow::onEvent(const SDL_Event& e) {
-	bool redraw = false;
+	SDL_Event transformed;
 	switch(e.type) {
 	case SDL_EVENT_QUIT:
 		return SDL_APP_SUCCESS;
-	case SDL_EVENT_WINDOW_RESIZED:
-	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-	case SDL_EVENT_WINDOW_SHOWN:
-	case SDL_EVENT_WINDOW_EXPOSED:
-		redraw = true;
-		break;
 	case SDL_EVENT_WINDOW_FOCUS_LOST:
-		redraw = m_board.DropToPileOrRollBack(m_mouse_x, m_mouse_y);
+		transformed = e;
+		SDL_ConvertEventToRenderCoordinates(m_renderer, &transformed);
+		m_board.DropToPileOrRollBack(m_mouse_x, m_mouse_y);
 		break;
 	case SDL_EVENT_MOUSE_MOTION:
-		m_mouse_x = e.motion.x;
-		m_mouse_y = e.motion.y;
-		redraw = true;
+		transformed = e;
+		SDL_ConvertEventToRenderCoordinates(m_renderer, &transformed);
+		m_mouse_x = transformed.motion.x;
+		m_mouse_y = transformed.motion.y;
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		m_mouse_x = e.button.x;
-		m_mouse_y = e.button.y;
-		redraw = e.button.button == 1 && m_board.TryGrabFromPile(e.button.x, e.button.y);
+		transformed = e;
+		SDL_ConvertEventToRenderCoordinates(m_renderer, &transformed);
+		m_mouse_x = transformed.button.x;
+		m_mouse_y = transformed.button.y;
+		if(transformed.button.button == 1)
+			m_board.TryGrabFromPile(m_mouse_x, m_mouse_y);
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		m_mouse_x = e.button.x;
-		m_mouse_y = e.button.y;
-		redraw = e.button.button == 1 && m_board.DropToPileOrRollBack(e.button.x, e.button.y);
+		transformed = e;
+		SDL_ConvertEventToRenderCoordinates(m_renderer, &transformed);
+		m_mouse_x = transformed.button.x;
+		m_mouse_y = transformed.button.y;
+		if(transformed.button.button == 1)
+			m_board.DropToPileOrRollBack(m_mouse_x, m_mouse_y);
 		break;
 	}
-	if(redraw)
-		DrawBoard();
 	return SDL_APP_CONTINUE;
 }

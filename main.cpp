@@ -21,6 +21,7 @@ SDL_AppResult SDL_AppInit(void **appstate, [[maybe_unused]] int argc, [[maybe_un
 	return SDL_APP_CONTINUE;
 }
 SDL_AppResult SDL_AppIterate([[maybe_unused]] void *appstate){
+	static_cast<GameWindow*>(appstate)->DrawBoard();
 	return SDL_APP_CONTINUE;
 }
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){

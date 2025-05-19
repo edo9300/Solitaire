@@ -25,11 +25,11 @@ class GameWindow {
 	int32_t m_mouse_x{};
 	int32_t m_mouse_y{};
 	GameBoard m_board;
-	void DrawBoard();
 	SDL_Texture* LoadSpriteTexture(const char* path) const;
 public:
 	GameWindow();
 	~GameWindow();
+	void DrawBoard();
 	int onEvent(const SDL_Event& e);
 };
 
