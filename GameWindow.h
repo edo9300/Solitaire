@@ -22,8 +22,10 @@ class GameWindow {
 	SDL_Window* m_window{};
 	SDL_Renderer* m_renderer{};
 	SDL_Texture* m_cards_texture{};
+	SDL_Texture* m_field_texture{};
 	int32_t m_mouse_x{};
 	int32_t m_mouse_y{};
+	bool m_redraw{true};
 	GameBoard m_board;
 	SDL_Texture* LoadSpriteTexture(const char* path) const;
 public:
