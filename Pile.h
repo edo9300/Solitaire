@@ -16,8 +16,8 @@
 class Pile {
 	std::list<Card> m_cards;
 	bool m_is_compacted{false};
-	std::pair<uint32_t, size_t> GetYIncrement() const {
-		return { Card::HEIGHT / 5u, m_is_compacted ? static_cast<size_t>(m_cards.size() - 1) : 0 };
+	std::pair<uint32_t, int> GetYIncrement() const {
+		return { Card::HEIGHT / 5u, m_is_compacted ? static_cast<int>(m_cards.size() - 1) : 0 };
 	}
 	void MoveNElementsToList(size_t to_skip, std::list<Card>& other, bool at_end = false);
 public:

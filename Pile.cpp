@@ -61,7 +61,7 @@ bool Pile::HitTestAndSplice([[maybe_unused]] int32_t mouse_x, int32_t mouse_y, P
 	auto [increment, cards_to_skip] = GetYIncrement();
 	auto start_y = 20 + static_cast<int32_t>(increment * (m_cards.size() - cards_to_skip - 1));
 	auto it = m_cards.rbegin();
-	for(size_t i = m_cards.size() - 1; i >= cards_to_skip; --i) {
+	for(int i = (static_cast<int>(m_cards.size()) - 1); i >= cards_to_skip; --i) {
 		if(start_y <= mouse_y && start_y + Card::HEIGHT >= mouse_y) {
 			if(!it->IsVisible())
 				return false;
